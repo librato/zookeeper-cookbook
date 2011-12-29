@@ -17,33 +17,15 @@
 # limitations under the License.
 #
 
-include_recipe "java"
-include_recipe "zookeeper"
+include_recipe "zookeeper::client"
 
-# register with cluster_service_discovery
-provide_service ("#{node[:zookeeper][:cluster_name]}-zookeeper")
+provide_service ("zookeeper")
 
 # Install
-package "hadoop-zookeeper-server"
-
-directory node[:zookeeper][:data_dir] do
-  owner      "zookeeper"
-  group      "zookeeper"
-  mode       "0755"
-  action     :create
-  recursive  true
-end
-
-directory node[:zookeeper][:log_dir] do
-  owner      "zookeeper"
-  group      "zookeeper"
-  mode       "0755"
-  action     :create
-  recursive  true
-end
+package "zookeeperd"
 
 # launch service
-service "hadoop-zookeeper-server" do
+service "zookeeper" do
   action [ :enable, :start ]
   running true
   supports :status => true, :restart => true

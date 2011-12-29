@@ -1,25 +1,24 @@
 # The number of milliseconds of each tick
-tickTime=2000
+tickTime=<%= @tick_time %>
 
-# The number of ticks that the initial 
+# The number of ticks that the initial
 # synchronization phase can take
-initLimit=10
+initLimit=<%= @init_limit %>
 
-# The number of ticks that can pass between 
+# The number of ticks that can pass between
 # sending a request and getting an acknowledgement
-syncLimit=5
+syncLimit=<%= @sync_limit %>
 
 # the directory where the snapshot is stored.
-dataDir=<%= @zookeeper_data_dir %>
+dataDir=<%= @data_dir %>
 
 # the port at which the clients will connect
-clientPort=2181
+clientPort=<%= @client_port %>
 
-<%- if @zookeeper_server_ips %>
-<%- @zookeeper_server_ips.each_with_index do |ip_address, idx| %>
-server.<%= idx %>=<%= ip_address %>:2888:3888
+<%- if @servers %>
+  <%- @servers.each_with_index do |address, idx| %>
+server.<%= idx %>=<%= address %>:<%= @quorum_port %>:<%= @leader_elect_port %>
+  <%- end %>
 <%- end %>
 
-<%- end %>
-
-maxClientCnxns=<%= @zookeeper_max_client_connections || 1000 %>
+maxClientCnxns=<%= @max_client_conns || 1000 %>

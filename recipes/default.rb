@@ -17,59 +17,72 @@
 # limitations under the License.
 #
 
-group 'zookeeper' do gid 305 ; action [:create] ; end
-user 'zookeeper' do
-  comment    'Hadoop Zookeeper Daemon'
-  uid        305
-  group      node[:groups]['zookeeper' ][:gid]
-  home       "/var/zookeeper"
-  shell      "/bin/false"
-  password   nil
-  supports   :manage_home => true
-  action     [:create, :manage]
+include_recipe "zookeeper::iptables"
+
+group_name = node[:zookeeper][:group]
+user_name = node[:zookeeper][:user]
+
+group group_name do
+  action [:create]
 end
 
-package "hadoop-zookeeper"
+user user_name do
+  comment    'Zookeeper Daemon User'
+  group      group_name
+  home       node[:zookeeper][:data_dir]
+  shell      "/bin/false"
+  password   nil
+  supports   :manage_home => false
+  action     [:create]
+end
+
+package "zookeeper"
 
 #
 # Configuration files
 
 directory node[:zookeeper][:data_dir] do
-  owner      "zookeeper"
-  group      "zookeeper"
+  owner      user_name
+  group      group_name
   mode       "0755"
   action     :create
   recursive  true
 end
 
 directory node[:zookeeper][:log_dir] do
-  owner      "zookeeper"
-  group      "zookeeper"
+  owner      user_name
+  group      group_name
   mode       "0755"
   action     :create
   recursive  true
 end
+
 #
-zookeeper_server_ips =  all_provider_private_ips("#{node[:zookeeper][:cluster_name]}-zookeeper").sort
-myid = zookeeper_server_ips.find_index( private_ip_of node )
 template_variables = {
-  :zookeeper_server_ips   => zookeeper_server_ips,
-  :myid                   => myid,
-  :zookeeper_data_dir     => node[:zookeeper][:data_dir],
-  :zookeeper_max_client_connections => node[:zookeeper][:max_client_connections],
+  :servers           => node[:zookeeper][:servers],
+  :myid              => node[:zookeeper][:myid],
+  :data_dir          => node[:zookeeper][:data_dir],
+  :tick_time         => node[:zookeeper][:tick_time],
+  :init_limit        => node[:zookeeper][:init_limit],
+  :sync_limit        => node[:zookeeper][:sync_limit],
+  :client_port       => node[:zookeeper][:client_port],
+  :quorum_port       => node[:zookeeper][:quorum_port],
+  :leader_elect_port => node[:zookeeper][:leader_elect_port],
+  :max_client_conns  => node[:zookeeper][:max_client_connections],
 }
-Chef::Log.debug template_variables.inspect
+
 %w[ zoo.cfg log4j.properties].each do |conf_file|
-  template "/etc/zookeeper/#{conf_file}" do
+  template "#{node[:zookeeper][:conf_dir]}/#{conf_file}" do
     owner "root"
     mode "0644"
     variables(template_variables)
     source "#{conf_file}.erb"
+    #notifies :restart, resources(:service => "zookeeper")
   end
 end
 
-template "/var/zookeeper/myid" do
- owner "zookeeper"
+template "#{template_variables[:data_dir]}/myid" do
+ owner user_name
  mode "0644"
  variables(template_variables)
  source "myid.erb"

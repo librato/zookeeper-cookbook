@@ -17,16 +17,4 @@
 # limitations under the License.
 #
 
-include_recipe "zookeeper::client"
-
-provide_service ("zookeeper")
-
-# Install
-package "zookeeperd"
-
-# launch service
-service "zookeeper" do
-  action [ :enable, :start ]
-  running true
-  supports :status => true, :restart => true
-end
+include_recipe "zookeeper"

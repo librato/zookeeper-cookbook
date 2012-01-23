@@ -9,6 +9,7 @@ supports         "ubuntu"
 
 depends          "java"
 depends          "iptables"
+depends          "runit"
 
 recipe           "client", "Installs ZK client"
 recipe           "server", "Installs ZK server"

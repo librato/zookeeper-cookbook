@@ -18,5 +18,3 @@
 #
 
 include_recipe "zookeeper"
-
-package "zookeeper-bin"

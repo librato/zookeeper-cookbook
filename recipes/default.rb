@@ -17,6 +17,9 @@
 # limitations under the License.
 #
 
+include_recipe "java"
+include_recipe "runit"
+
 include_recipe "zookeeper::iptables"
 
 group_name = node[:zookeeper][:group]
@@ -36,32 +39,62 @@ user user_name do
   action     [:create]
 end
 
-package "zookeeper"
+directory "/opt/src"
 
-#
-# Configuration files
-
-directory node[:zookeeper][:data_dir] do
-  owner      user_name
-  group      group_name
-  mode       "0755"
-  action     :create
-  recursive  true
+version = node[:zookeeper][:version]
+remote_file "/opt/src/zookeeper-#{version}.tar.gz" do
+  source "#{node[:zookeeper][:mirror]}/zookeeper-#{version}/zookeeper-#{version}.tar.gz"
+  checksum node[:zookeeper][:checksum]
+  mode "0644"
 end
 
-directory node[:zookeeper][:log_dir] do
-  owner      user_name
-  group      group_name
-  mode       "0755"
-  action     :create
-  recursive  true
+destdir = "/opt/zookeeper-#{version}"
+
+[node[:zookeeper][:conf_dir]].each do |dir|
+  directory dir do
+    owner "root"
+    group "root"
+    mode 0755
+    recursive true
+  end
 end
 
-#
+[node[:zookeeper][:data_dir], node[:zookeeper][:log_dir]].each do |dir|
+  directory dir do
+    owner node[:zookeeper][:user]
+    group node[:zookeeper][:group]
+  end
+end
+
+bash "untar_zookeeper" do
+  user "root"
+  cwd "/opt"
+  code %(tar zxf /opt/src/zookeeper-#{version}.tar.gz)
+  not_if { File.exists? destdir }
+end
+
+link "/opt/zookeeper" do
+  to "/opt/zookeeper-#{version}"
+end
+
+bash "copy zk conf" do
+  user "root"
+  cwd destdir
+  code %(cp -R ./conf/* #{node[:zookeeper][:conf_dir]})
+  not_if { File.exists? "#{node[:zookeeper][:conf_dir]}/zoo_sample.cfg" }
+end
+
+runit_service "zookeeper"
+
+service "zookeeper" do
+  subscribes :restart, resources(:bash => "untar_zookeeper")
+end
+
 template_variables = {
   :servers           => node[:zookeeper][:servers],
   :myid              => node[:zookeeper][:myid],
   :data_dir          => node[:zookeeper][:data_dir],
+  :log_dir           => node[:zookeeper][:log_dir],
   :tick_time         => node[:zookeeper][:tick_time],
   :init_limit        => node[:zookeeper][:init_limit],
   :sync_limit        => node[:zookeeper][:sync_limit],
@@ -77,14 +110,14 @@ template_variables = {
     mode "0644"
     variables(template_variables)
     source "#{conf_file}.erb"
-    #notifies :restart, resources(:service => "zookeeper")
+    notifies :restart, resources(:service => "zookeeper")
   end
 end
 
 template "#{template_variables[:data_dir]}/myid" do
- owner user_name
- mode "0644"
- variables(template_variables)
- source "myid.erb"
+  owner user_name
+  mode "0644"
+  variables(template_variables)
+  source "myid.erb"
+  notifies :restart, resources(:service => "zookeeper")
 end
-

@@ -9,5 +9,5 @@ ZOOCFG="<%= @node[:zookeeper][:conf_dir] %>/zoo.cfg"
 JAVA_OPTS="-Xmx<%= @node[:zookeeper][:max_heap] %>"
 <%- end %>
 
-exec chpst -u zookeeper java $JAVA_OPTS \
+exec <%= @node[:runit][:chpst_bin] %> -u zookeeper -e env java $JAVA_OPTS \
      -cp $CLASSPATH $JVMFLAGS $ZOOMAIN $ZOOCFG

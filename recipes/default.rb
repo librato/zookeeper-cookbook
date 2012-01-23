@@ -84,7 +84,11 @@ bash "copy zk conf" do
   not_if { File.exists? "#{node[:zookeeper][:conf_dir]}/zoo_sample.cfg" }
 end
 
-runit_service "zookeeper"
+runit_service "zookeeper" do
+  # XXX: There should be a way to force the environment directory
+  # creation.
+  env 'MY_TEST_VAR' => 'MY_TEST_VALUE'
+end
 
 service "zookeeper" do
   subscribes :restart, resources(:bash => "untar_zookeeper")

@@ -11,5 +11,5 @@ depends          "java"
 depends          "iptables"
 depends          "runit"
 
-recipe           "client", "Installs ZK client"
-recipe           "server", "Installs ZK server"
+recipe           "zookeeper::client", "Installs ZK client"
+recipe           "zookeeper::server", "Installs ZK server"

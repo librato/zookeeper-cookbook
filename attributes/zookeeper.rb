@@ -8,8 +8,8 @@ default[:zookeeper][:log_dir] = '/var/log/zookeeper'
 
 default[:zookeeper][:max_heap] = "512m"
 
-default[:zookeeper][:version] = "3.3.4"
-default[:zookeeper][:checksum] = "de698d412c4b0ed5230aec9c4412045803f09ba0a0f7839c707a22809d2dbce9"
+default[:zookeeper][:version] = "3.3.5"
+default[:zookeeper][:checksum] = "b78b92edf489fca7587ec6ddfcd95714449d55b1288a67a7369844fa61124f0a"
 # Must confirm to $URL/zookeeper-<version>/zookeeper-<version>.tar.gz
 default[:zookeeper][:mirror] = "http://mirrors.ibiblio.org/apache/zookeeper/"
 

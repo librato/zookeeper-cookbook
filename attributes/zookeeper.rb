@@ -21,6 +21,9 @@ default[:zookeeper][:quorum_port] = 2888
 default[:zookeeper][:leader_elect_port] = 3888
 default[:zookeeper][:max_client_connections] = 30
 
+# How long to cache DNS entries (JVM option)
+default[:zookeeper][:dns_cache_ttl] = 60
+
 # Set to the global list of server IPs.
 #
 default[:zookeeper][:servers] = nil
